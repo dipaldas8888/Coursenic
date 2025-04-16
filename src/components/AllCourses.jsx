@@ -6,6 +6,7 @@ import axios from "axios";
 function AllCourses() {
     useEffect(() => {
         document.title = "All Courses";
+        getAllCourses();
         
     }
     , []);
@@ -37,10 +38,6 @@ function AllCourses() {
             });
         });
     };
-   useEffect(() => {
-        getAllCourses();
-    }
-    , []);
 
  const [courses, setCourses] = useState([
     
