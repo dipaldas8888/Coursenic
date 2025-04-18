@@ -1,41 +1,55 @@
 import { useState } from "react";
-
-// Bootstrap CSS
-import { Button, Col, Container, Row } from "reactstrap";
+import { CssBaseline, ThemeProvider, createTheme } from "@mui/material";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { toast, ToastContainer } from "react-toastify";
-import Home from "./components/Home.jsx";
-import Course from "./components/Course.jsx";
-import AllCourses from "./components/AllCourses.jsx";
-import AddCourse from "./components/AddCourse.jsx";
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./App.css";
-import Header from "./components/Header.jsx";
-import Sidebar from "./components/Sidebar.jsx";
+
+import Home from "./components/Home";
+import AllCourses from "./components/AllCourses";
+import AddCourse from "./components/AddCourse";
+import Layout from "./components/Layout";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+
+// Create a theme instance
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: "#1976d2",
+    },
+    secondary: {
+      main: "#dc004e",
+    },
+    background: {
+      default: "#f5f5f5",
+    },
+  },
+  typography: {
+    fontFamily: "'Roboto', 'Helvetica', 'Arial', sans-serif",
+    h1: {
+      fontSize: "2.5rem",
+      fontWeight: 500,
+    },
+    h2: {
+      fontSize: "2rem",
+      fontWeight: 500,
+    },
+  },
+});
 
 function App() {
   return (
-    <>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
       <Router>
         <ToastContainer />
-        <Header />
-        <Container>
-          <Row>
-            <Col md={4}>
-              <Sidebar />
-            </Col>
-            <Col md={8}>
-              <Routes>
-                <Route path="/" element={<Home />} exact />
-                <Route path="/add-course" element={<AddCourse />} exact />
-                <Route path="/view-course" element={<AllCourses />} exact />
-              </Routes>
-            </Col>
-          </Row>
-        </Container>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/add-course" element={<AddCourse />} />
+            <Route path="/view-courses" element={<AllCourses />} />
+          </Routes>
+        </Layout>
       </Router>
-    </>
+    </ThemeProvider>
   );
 }
 

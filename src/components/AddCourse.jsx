@@ -1,136 +1,191 @@
-import { Fragment, useState, useEffect } from "react";
-import { Button, Container, FormGroup } from "reactstrap";
-import { Form, Label, Input } from "reactstrap";
-import React from "react";
+import { useState, useEffect } from "react";
+import {
+  Typography,
+  TextField,
+  Button,
+  Paper,
+  Box,
+  CircularProgress,
+  Stack,
+  Alert
+} from "@mui/material";
+import SaveIcon from "@mui/icons-material/Save";
+import ClearIcon from "@mui/icons-material/Clear";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import base_url from "./apiservice.js";
+import base_url from "./apiservice";
 import { toast } from "react-toastify";
-import { useLocation, useNavigate } from 'react-router-dom'; // Import useLocation and useNavigate
 
-function AddCourse() { // You might not need courseInput prop anymore
-    const location = useLocation();
-    const navigate = useNavigate();
-    const [courses, setcourses] = useState({
-        userid: "",
-        title: "",
-        description: "",
-        id: null // Add an 'id' field for updating
-    });
-    console.log("location state", location.state);
-    const isUpdate = location.state && location.state.courseData;
+function AddCourse() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const [courses, setCourses] = useState({
+    courseId: "",
+    title: "",
+    description: "",
+    id: null
+  });
+  
+  const isUpdate = location.state && location.state.courseData;
 
-    useEffect(() => {
-        document.title = isUpdate ? "Edit Course" : "Add Course";
-        if (isUpdate) {
-            const { courseData } = location.state;
-            console.log("courseData", courseData);
-            setcourses({
-                userid: courseData.userid || "",
-                title: courseData.title || "",
-                description: courseData.description || "",
-                id: courseData.id || null // Set the ID for updating
-            });
-        }
-    }, [location.state, isUpdate]);
+  useEffect(() => {
+    document.title = isUpdate ? "Coursenic - Edit Course" : "Coursenic - Add Course";
+    
+    if (isUpdate) {
+      const { courseData } = location.state;
+      setCourses({
+        courseId: courseData.courseId || "",
+        title: courseData.title || "",
+        description: courseData.description || "",
+        id: courseData.id || null
+      });
+    }
+  }, [location.state, isUpdate]);
 
-    const handleForm = (e) => {
-        e.preventDefault();
-        if (!courses.userid || !courses.title || !courses.description) {
-            toast.error("All fields are required!", {
-                position: "top-right",
-                autoClose: 2000,
-                hideProgressBar: false,
-                closeOnClick: true,
-                pauseOnHover: true,
-                draggable: true,
-                progress: undefined,
-            });
-            return; // Stop form submission
-        }
-        console.log(courses);
-        if (isUpdate && courses.id) {
-            updateDataToServer(courses);
-        } else {
-            postdatatoserver(courses);
-        }
-    };
+  const handleForm = (e) => {
+    e.preventDefault();
+    
+    // Form validation
+    if (!courses.courseId || !courses.title || !courses.description) {
+      setError("All fields are required!");
+      toast.error("All fields are required!");
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    
+    if (isUpdate && courses.id) {
+      updateDataToServer(courses);
+    } else {
+      postDataToServer(courses);
+    }
+  };
 
-    const postdatatoserver = (data) => {
-        axios.post(`${base_url}`, data)
-            .then((response) => {
-                console.log(response);
-                console.log("success");
-                toast.success("Course added successfully");
-                navigate('/'); // Redirect back to the course list
-            })
-            .catch((error) => {
-                console.log(error);
-                console.log("error");
-                toast.error("Failed to add course");
-            });
-    };
+  const postDataToServer = (data) => {
+    axios
+      .post(`${base_url}`, data
+      )
+      
+      
+      .then((response) => {
+        console.log(response);
+        setLoading(false);
+        toast.success("Course added successfully");
+        navigate("/view-courses");
+      })
+      .catch((error) => {
+        console.error("Error adding course:", error);
+        setLoading(false);
+        setError("Failed to add course. Please try again.");
+        toast.error("Failed to add course");
+      });
+  };
 
-    const updateDataToServer = (data) => {
-        axios.put(`${base_url}/${data.id}`, data)
-            .then((response) => {
-                console.log(response);
-                console.log("success");
-                toast.success("Course updated successfully");
-                navigate('/'); // Redirect back to the course list
-            })
-            .catch((error) => {
-                console.log(error);
-                console.log("error");
-                toast.error("Failed to update course");
-            });
-    };
+  const updateDataToServer = (data) => {
+    axios
+      .put(`${base_url}/${data.id}`, data)
+      .then((response) => {
+        console.log(response);
+        setLoading(false);
+        toast.success("Course updated successfully");
+        navigate("/view-courses");
+      })
+      .catch((error) => {
+        console.error("Error updating course:", error);
+        setLoading(false);
+        setError("Failed to update course. Please try again.");
+        toast.error("Failed to update course");
+      });
+  };
 
-    const resetForm = () => {
-        setcourses({ userid: "", title: "", description: "", id: null });
-    };
+  const resetForm = () => {
+    setCourses({ courseId: "", title: "", description: "", id: null });
+    setError(null);
+  };
 
-    return (
-        <Fragment>
-            <h1 style={{ textAlign: "center" }}>{isUpdate ? "Edit Course" : "Fill Course Details"}</h1>
-            <Form onSubmit={handleForm}>
-                <FormGroup>
-                    <Label for="userId">Course id</Label>
-                    <Input
-                        type="text"
-                        id="userId"
-                        placeholder="Enter here"
-                        value={courses.userid}
-                        onChange={(e) => setcourses({ ...courses, userid: e.target.value })}
-                    />
-                </FormGroup>
-                <FormGroup>
-                    <Label for="title">Course Title</Label>
-                    <Input
-                        type="text"
-                        id="title"
-                        placeholder="Enter course title"
-                        value={courses.title}
-                        onChange={(e) => setcourses({ ...courses, title: e.target.value })}
-                    />
-                </FormGroup>
-                <FormGroup>
-                    <Label for="description">Course Description</Label>
-                    <Input
-                        type="textarea"
-                        id="courseDescription"
-                        placeholder="Enter course description"
-                        style={{ height: '150px' }}
-                        value={courses.description}
-                        onChange={(e) => setcourses({ ...courses, description: e.target.value })}
-                    />
-                </FormGroup>
-                <Container className="text-center">
-                    <Button type="submit" color="primary">{isUpdate ? "Update Course" : "Add Course"}</Button>
-                    <Button type="reset" color="danger" className="mx-2" onClick={resetForm}>Reset</Button>
-                </Container>
-            </Form>
-        </Fragment>
-    );
+  return (
+    <Paper elevation={3} sx={{ p: { xs: 2, sm: 4 }, borderRadius: 2 }}>
+      <Box component="form" onSubmit={handleForm}>
+        <Typography variant="h5" component="h1" gutterBottom mb={3}>
+          {isUpdate ? "Update Course" : "Add New Course"}
+        </Typography>
+        
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+        
+        <Stack spacing={3}>
+          <TextField
+            label="Course ID"
+            variant="outlined"
+            fullWidth
+            value={courses.courseId}
+            onChange={(e) => setCourses({ ...courses, courseId: e.target.value })}
+            required
+            error={error && !courses.courseId}
+            helperText={error && !courses.courseId ? "Course ID is required" : ""}
+          />
+          
+          <TextField
+            label="Course Title"
+            variant="outlined"
+            fullWidth
+            value={courses.title}
+            onChange={(e) => setCourses({ ...courses, title: e.target.value })}
+            required
+            error={error && !courses.title}
+            helperText={error && !courses.title ? "Course title is required" : ""}
+          />
+          
+          <TextField
+            label="Course Description"
+            variant="outlined"
+            fullWidth
+            multiline
+            rows={4}
+            value={courses.description}
+            onChange={(e) => setCourses({ ...courses, description: e.target.value })}
+            required
+            error={error && !courses.description}
+            helperText={error && !courses.description ? "Course description is required" : ""}
+          />
+          
+          <Box display="flex" justifyContent="flex-end" gap={2} mt={2}>
+            <Button
+              variant="outlined"
+              color="error"
+              startIcon={<ClearIcon />}
+              onClick={resetForm}
+            >
+              Reset
+            </Button>
+            
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              startIcon={<SaveIcon />}
+              disabled={loading}
+            >
+              {loading ? (
+                <CircularProgress size={24} />
+              ) : isUpdate ? (
+                "Update Course"
+              ) : (
+                "Add Course"
+              )}
+            </Button>
+          </Box>
+        </Stack>
+      </Box>
+    </Paper>
+  );
 }
 
 export default AddCourse;
